@@ -1,57 +1,115 @@
-var Class = function(methods) {  
-    var klass = function() {   
-        this.initialize.apply(this, arguments);         
-    }; 
-    var property;
-    for (property in methods) {
-       klass.prototype[property] = methods[property];
-    }
-         
-    if (!klass.prototype.initialize) klass.prototype.initialize = function(){};     
-   
-    return klass;   
-};
+var MagentoJsApi = (function () {
+	var	modules = {
+	    'validate': {
+	    	active: true,
+	    	version: '1.0.0',
+	    	source: ''
+	    },
+	    'report': {
+	    	active: true,
+	    	version: '1.0.0',
+	    	source: ''
+	    },
+	    'jquery': {
+	    	active: true,
+	    	version: '1.11.0',
+	    	outscript: ''
+	    }
+  	};
+ 
+  	function doSomethingPrivate() {
+    	//...
+  	}
 
-MagentoJsApi = Class({
-	modulesConfig: {
-		'validate'	: {
-			'active'	:	true,
-			'version'	:	'1.0.0'
-		},
-	},
-	initialize: function () {
-	},
-	
-	Modules: {
-		mergeModules: function (arguments) {
-			var obj3 = {};
-		
-			for (var attrname in this.modulesConfig) { obj3[attrname] = this.modulesConfig[attrname]; }
+  	function verifiKeyExist() {
+  		var args = Array.prototype.slice.call(arguments),
+     	obj = args.shift();
 
-			for(var key in arguments) {
-	    		for (var attrname in arguments[key]) { obj3[attrname] = arguments[key][attrname]; }
+  		for (var i = 0; i < args.length; i++) {
+    		if (!obj.hasOwnProperty(args[i])) {
+      			return false;
+    		}
+    		obj = obj[args[i]];
+  		}
+  		return true;
+  	}
+
+  	function verifyChanges (module) {
+  		if ( typeof module === "object" ) {
+		  	for(var key in module) {
+				if((verifiKeyExist(modules,key))&&(typeof module[key] === "object")){
+					for(var keyconf in module[key]) {
+						if ((verifiKeyExist(modules,key,keyconf))&&(typeof module[key][keyconf] != "undefined")) {
+							modules[key][keyconf] = module[key][keyconf];
+						}
+					}
+				}
 			}
-			console.table(obj3);
-			return obj3;
 		}
-	},
+  	}
 
-	loadmodules: function () {
-		console.log(this.Modules.mergeModules(arguments));
-		// for(var key in this.modules) {
-		// 	console.log(this.modules[key]);
-		// }
-		// for(var i=0; i<arguments.length; i++) {
-		// 	console.log(this.modules);
-	 //    	//alert("Hi, " + arguments[i]);
-		// }
+  	function extendModule ( scope, module, name) {
+  		if (module['active'] == true) {
+		    for (var property in module) {
+		    	if(property == 'source'){
+		    		scope[name] = module[property];
+		    	}
+		    }
+  		}
 	}
+ 
+	// Return an object exposed to the public
+	return {
+	 
+	    // Add items to our basket
+	    addModule: function( newModule ) {
+	    	for(var key in newModule) {
+	    		if (!verifiKeyExist(modules,key)) {
+	    			modules[key] = newModule[key];
+	    		}
+	    	}
+	    },
+	 
+	    // Public alias to a  private function
+	    doSomething: doSomethingPrivate,
+
+	    // override the current modules
+		loadModule: function( modulesLoaded ) {
+			verifyChanges(modulesLoaded);
+			for(var key in modulesLoaded) {
+				extendModule(this, modulesLoaded[key], key);
+			}
+		},
+
+		getModules: function () {
+			return modules;
+		}
+	};
+})();
+
+
+MagentoJsApi.addModule({
+  'sobremesa': {
+  	active: true,
+  	version: '1.0.0'
+  }
 });
-var obj3 = {'validate'	:{
-		'active'	:	false
-	}};
-var magentojsapi = new MagentoJsApi().loadmodules({
-	'validate'	:{
-		'active'	:	false
-	}
+
+MagentoJsApi.loadModule({
+	'jquery': {
+		active: true,
+		outscript: '/js/ceicom/jquery.min.js'
+	},
+	'validate': {
+    	active: true,
+    	source: {
+    		getModuleName: function () {
+    			return 'validate';
+    		}
+    	}
+    }
 });
+
+modulo = MagentoJsApi.validate.getModuleName();
+
+console.log(modulo);
