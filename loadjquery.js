@@ -1,1 +1,0 @@
-function CustomerAccountForm () { var jQuery, postcode, telephone, taxvat, birthDay, birthMonth, birthYear; };
