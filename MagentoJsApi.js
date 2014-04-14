@@ -54,19 +54,57 @@ var MagentoJsApi = (function () {
 		    	if(property == 'source'){
 		    		scope[name] = module[property];
 		    	}else if(property == 'outscript'){
-		    		getOutSctipt(module[property]);
+		    		//getOutSctipt(module[property]);
+		    		loadJS(module[property], function() { 
+					    console.log('lol!!!!');
+					});
 		    	}
 		    }
   		}
 	}
 
-	function getOutSctipt (url) {
+	function loadJS(src, callback) {
+	    var s = document.createElement('script');
+	    s.src = src;
+	    s.async = true;
+	    s.onreadystatechange = s.onload = function() {
+	        var state = s.readyState;
+	        if (!callback.done && (!state || /loaded|complete/.test(state))) {
+	            callback.done = true;
+	            callback();
+	        }
+	    };
+	    document.getElementsByTagName('head')[0].appendChild(s);
+	}
+
+	function getOutSctipt (url, callback) {
+		try{
+			if(!window.jQuery) {
+				var maxLoadAttempts = 10;
+	            var jQueryLoadAttempts = 0;
+	            
+	            var head= document.getElementsByTagName('head')[0];
+				var script= document.createElement('script');
+				script.type= 'text/javascript';
+				checkjQueryLoaded = setInterval(function() {
+	                script.src= url;
+	                if(typeof jQuery == "undefined") {
+	                    callback(true);
+	                } else if(maxLoadAttempts < jQueryLoadAttempts) {
+	                    window.clearInterval(checkjQueryLoaded);
+	                    callback(false);
+	                }
+	                jQueryLoadAttempts++;
+	            },800);
+			}
+		}catch(exception){
+			callback(false);
+		}
 		var head= document.getElementsByTagName('head')[0];
 		var script= document.createElement('script');
         script.type= 'text/javascript';
         script.src= url;
         head.appendChild(script);
-		console.log(url);
 	}
  
 	// Return an object exposed to the public
