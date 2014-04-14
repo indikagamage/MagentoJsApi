@@ -49,13 +49,24 @@ var MagentoJsApi = (function () {
   	}
 
   	function extendModule ( scope, module, name) {
-  		if (module['active'] == true) {
+  		if (module.active == true) {
 		    for (var property in module) {
 		    	if(property == 'source'){
 		    		scope[name] = module[property];
+		    	}else if(property == 'outscript'){
+		    		getOutSctipt(module[property]);
 		    	}
 		    }
   		}
+	}
+
+	function getOutSctipt (url) {
+		var head= document.getElementsByTagName('head')[0];
+		var script= document.createElement('script');
+        script.type= 'text/javascript';
+        script.src= url;
+        head.appendChild(script);
+		console.log(url);
 	}
  
 	// Return an object exposed to the public
@@ -64,8 +75,9 @@ var MagentoJsApi = (function () {
 	    // Add items to our basket
 	    addModule: function( newModule ) {
 	    	for(var key in newModule) {
-	    		if (!verifiKeyExist(modules,key)) {
+	    		if ((!verifiKeyExist(modules,key))&&(newModule[key].active == true)) {
 	    			modules[key] = newModule[key];
+	    			extendModule(this, newModule[key], key);
 	    		}
 	    	}
 	    },
@@ -86,30 +98,3 @@ var MagentoJsApi = (function () {
 		}
 	};
 })();
-
-
-MagentoJsApi.addModule({
-  'sobremesa': {
-  	active: true,
-  	version: '1.0.0'
-  }
-});
-
-MagentoJsApi.loadModule({
-	'jquery': {
-		active: true,
-		outscript: '/js/ceicom/jquery.min.js'
-	},
-	'validate': {
-    	active: true,
-    	source: {
-    		getModuleName: function () {
-    			return 'validate';
-    		}
-    	}
-    }
-});
-
-modulo = MagentoJsApi.validate.getModuleName();
-
-console.log(modulo);
